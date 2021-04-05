@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.9 && < 5
 - unordered-containers
 - hashable
+- transformers
 
 library:
   source-dirs: src
