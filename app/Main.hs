@@ -1,6 +1,7 @@
 module Main where
 
 import Probability
+import Probability.Collapse
 import Control.Monad
 
 
