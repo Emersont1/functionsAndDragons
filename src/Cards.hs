@@ -1,11 +1,15 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Cards where
     import Probability
     import Data.Ratio
-    import Control.Monad.Trans.State.Lazy
-    import Control.Monad.Trans.Class
+    import Data.List
+    import Data.Hashable
+    import GHC.Generics (Generic)
 
-    data Suit = Clubs | Hearts | Spades | Diamonds deriving(Eq, Show)
-    data Value = Ace | Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King deriving(Eq, Show)
+    data Suit = Clubs | Hearts | Spades | Diamonds deriving(Eq, Show, Ord, Generic)
+    data Value = Ace | Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King deriving(Eq, Show, Ord, Generic)
+    instance Hashable Suit
+    instance Hashable Value
     suits = [Clubs, Hearts, Spades, Diamonds]
     values = [Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King]
     
@@ -13,14 +17,16 @@ module Cards where
     deck :: [Card]
     deck = (,) <$> suits <*> values
 
-    --shuffle :: Probability [Card]
-    shuffle :: [Card] -> Probability (Card, [Card])
-    shuffle = runStateT deck
+    shuffleN :: Int -> Probability [Card]
+    shuffleN n = return . concat . replicate n $ deck
 
-    deal  :: StateT [Card] Probability Card
-    deal = do shoe <- get
-              c <- lift $ rand shoe
-              put [y|y<-shoe, y/=c]
-              return c
+    shuffle :: Probability [Card]
+    --shuffle :: [Card] -> Probability (Card, [Card])
+    shuffle = return deck
+
+    deal  ::[Card] -> Probability (Card, [Card])
+    deal deck = do c <- rand deck
+                   let d = delete c deck
+                   return (c, d)
               
               
