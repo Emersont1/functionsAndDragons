@@ -17,7 +17,7 @@ module Probability.Collapse(collapse, collapseEq, collapseSort) where
             | otherwise = seekAdd ((c, p0):b) a v p1
     
     collapseSort :: (Ord a, Eq a) => Probability  a -> Probability a
-    collapseSort (P x) = P (foldl' f [] (sortBy (\(a,_) (b,_) -> compare a b) x)) where
+    collapseSort (P x) = P . foldl' f [] . sortOn fst $ x where
         f [] v = [v]
         f ((v0, p0):xs) (v1, p1) 
             | v0 == v1 = (v0, p0+p1):xs 
