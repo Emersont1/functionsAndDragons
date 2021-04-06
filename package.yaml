@@ -40,9 +40,27 @@ executables:
     - functionsAndDragons
 
 tests:
-  functionsAndDragons-test:
-    main:                Spec.hs
-    source-dirs:         test
+  CollapseTest-Eq:
+    main:                Main.hs
+    source-dirs:         test/CollapseTest/Eq
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - functionsAndDragons
+  CollapseTest-HM:
+    main:                Main.hs
+    source-dirs:         test/CollapseTest/HM
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - functionsAndDragons
+  CollapseTest-Sort:
+    main:                Main.hs
+    source-dirs:         test/CollapseTest/Sort
     ghc-options:
     - -threaded
     - -rtsopts

@@ -6,7 +6,8 @@ import Cards
 import Control.Monad
 
 
-cps = collapse
+cps :: (Eq a) => Probability a -> Probability a
+cps = collapseEq
 
 dmain :: IO ()
 dmain = (print . normalise . cps ) (do x <- dice 6
@@ -19,7 +20,7 @@ cmain :: IO ()
 cmain =  (print . cps) (do shoe <- shuffleN 30
                            (c@(s,v), shoe) <- deal shoe
                            (c2@(s2,v2), shoe) <- deal shoe
-                           return  . sort $ [c, c2]
+                           return . sort $ [c, c2]
                            )
                  
                  
