@@ -1,28 +1,12 @@
 module Main where
-import Data.List
-import Probability
-import Probability.Collapse
+import BlackJack
 import Cards
-import Control.Monad
+import Probability.Collapse
+import Probability
 
 
-cps :: (Eq a) => Probability a -> Probability a
-cps = collapseEq
+game :: Probability BlackJackGame
+game = makeGame [([Just (Spades, Ten), Just (Clubs, King)], False), ([Just (Hearts, Four), Nothing], False)] [(Hearts, Five), (Spades, Ace)] (deckN 1)
 
-dmain :: IO ()
-dmain = (print . normalise . cps ) (do x <- dice 6
-                                       y <- dice 6
-                                       let z = x + y
-                                       guard (z /= 7)
-                                       return z)
-
-cmain :: IO ()
-cmain =  (print . cps) (do shoe <- shuffleN 30
-                           (c@(s,v), shoe) <- deal shoe
-                           (c2@(s2,v2), shoe) <- deal shoe
-                           return . sort $ [c, c2]
-                           )
-                 
-                 
-
-main = cmain
+main :: IO ()
+main = (print . collapseSort . fmap fst) game

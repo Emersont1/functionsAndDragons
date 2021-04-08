@@ -17,8 +17,11 @@ module Cards where
     deck :: [Card]
     deck = (,) <$> suits <*> values
 
+    deckN :: Int -> [Card]
+    deckN n = concat . replicate n $ deck
+
     shuffleN :: Int -> Probability [Card]
-    shuffleN n = return . concat . replicate n $ deck
+    shuffleN = return . deckN
 
     shuffle :: Probability [Card]
     --shuffle :: [Card] -> Probability (Card, [Card])
@@ -28,5 +31,18 @@ module Cards where
     deal deck = do c <- rand deck
                    let d = delete c deck
                    return (c, d)
-              
+    
+    -- Deals N cards from Deck
+    dealN :: [Card] -> Int -> Probability ([Card], [Card])
+    dealN deck 0 = return ([], deck)
+    dealN deck n = do (c, d) <- deal deck
+                      (hand, d') <- dealN d $ n-1
+                      return (c:hand, d')
+    
+    -- Deals N cards to P players
+    dealNP :: [Card] -> Int -> Int -> Probability ([[Card]], [Card])
+    dealNP deck n 0 = return ([], deck)
+    dealNP deck n p = do (h, d) <- dealN deck n
+                         (hands, d') <- dealNP d n $ p-1
+                         return (h:hands, d')
               

@@ -28,3 +28,8 @@ instance Alternative Probability where
     empty  = P []
     (P [] ) <|> r = r
     l <|> _ = l
+
+-- fromMaybe, for use in the Do block
+fromMaybe :: Maybe a -> Probability a
+fromMaybe Nothing = P []
+fromMaybe (Just x) = return x
