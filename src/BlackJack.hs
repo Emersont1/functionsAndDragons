@@ -1,5 +1,6 @@
 module BlackJack where
     import Data.List
+    import Data.Bifunctor
     import Probability
     import Probability.Collapse
     import Cards
@@ -8,13 +9,13 @@ module BlackJack where
     import Control.Applicative
     import Delete
 
-    data BlackJack = TwoCardTrick | FiveCardTrick | Playing [Value] | Bust [Value] deriving(Eq, Show, Ord)
+    data BlackJack = TwoCardTrick | FiveCardTrick | Playing [Value] | Bust deriving(Eq, Show, Ord)
 
     process:: BlackJack -> BlackJack
     process (Playing hand)
          | (length hand ==2) && ((== 21). sum . map cardScore) hand = TwoCardTrick
          | (length hand ==5) && (not . bust) hand = FiveCardTrick
-         | bust hand = Bust hand
+         | bust hand = Bust
          | otherwise = Playing hand
     process x = x
 
@@ -32,45 +33,50 @@ module BlackJack where
         | high <= 21 = high
         | otherwise = bScore x
             where high = hScore x
-    score (Bust _) = 0
+    score Bust = 0
     score FiveCardTrick = 22
 
 
     -- [Player's HandState] [Rest of Deck]
     type BlackJackGame = ([BlackJack], [Card])
 
-    makeGame :: [([Maybe Card], Bool)] -> [Card] -> [Card] -> Probability BlackJackGame
+    makeGame :: [([Maybe Value], Bool)] -> [Card] -> [Card] -> Probability BlackJackGame
     makeGame hands' knownDiscarded fullDeck = do shortenedDeck <- fromMaybe ( safeDelete' fullDeck knownDiscarded)
                                                  (hands, deck) <- getValidHands hands' shortenedDeck
                                                  guard True -- Check Valid
                                                  return (hands, deck)
     
-    getValidHands :: [([Maybe Card], Bool)] -> [Card] -> Probability BlackJackGame
+    getValidHands :: [([Maybe Value], Bool)] -> [Card] -> Probability BlackJackGame
     getValidHands [] deck = return ([], deck)
     getValidHands (h:hs) deck = do (h', d) <- getValidHands' h deck
                                    (hs', d') <- getValidHands hs d
                                    return (h':hs', d')
 
 
-    getValidHands' :: ([Maybe Card], Bool) -> [Card] -> Probability (BlackJack,[Card])
+    getValidHands' :: ([Maybe Value], Bool) -> [Card] -> Probability (BlackJack,[Card])
     getValidHands' (hands', b) deck = do (hand, d) <- getCards hands' deck
-                                         let h' = map snd hand
-                                         let h = (process . Playing) h'
+                                         let h = (process . Playing) hand
                                          let keep = if b
-                                                    then bust h' && (not . bust . init) h' 
-                                                    else (not . bust) h'
+                                                    then bust hand && (not . bust . init) hand
+                                                    else (not . bust) hand
                                          
                                          guard keep
                                          return (h, d)
 
-    getCards :: [Maybe Card] -> [Card] -> Probability ([Card], [Card])
+    getCards :: [Maybe Value] -> [Card] -> Probability ([Value], [Card])
     getCards [] deck = return ([], deck)
     getCards (x:xs) deck = do (u, d) <- getCard x deck
                               (v, d') <- getCards xs d
                               return (u:v, d')
 
 
-    getCard :: Maybe Card -> [Card] -> Probability (Card, [Card])
-    getCard Nothing deck = deal deck
+    getCard :: Maybe Value -> [Card] -> Probability (Value, [Card])
+    getCard Nothing deck = do (c,d) <- deal deck
+                              let v = snd c
+                              return (v, d)
     getCard (Just x) deck = return (x, deck)
 
+    twist :: BlackJack -> [Card] -> Probability (BlackJack, [Card])
+    twist (Playing x) deck = collapseSort $ do  ((_, c),d) <- deal deck
+                                                return ((process . Playing) (c:x), d)
+    twist x d = return (x, d)

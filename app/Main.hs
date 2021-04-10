@@ -6,7 +6,17 @@ import Probability
 
 
 game :: Probability BlackJackGame
-game = makeGame [([Just (Spades, Ten), Just (Clubs, King)], False), ([Just (Hearts, Four), Nothing], False)] [(Hearts, Five), (Spades, Ace)] (deckN 1)
+game = makeGame [([Just (Four), Just (Seven)], False), ([Just (Six), Nothing], False)] [(Hearts, Five), (Spades, Ace)] (deckN 1)
+
+moves :: Probability Bool
+moves = do (players, d) <- game
+           let p = head players
+           let ps = tail players
+           (p', d') <- twist p d
+           let dealer = players !! 1
+           return $ (score p' > score dealer) && (score p <= score dealer)
+
+
 
 main :: IO ()
-main = (print . collapseSort . fmap fst) game
+main = (print . collapseSort) moves
